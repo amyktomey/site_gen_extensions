@@ -7,8 +7,8 @@ from pathlib import Path
 from docutils.core import publish_parts
 from markdown import markdown
 from ssg.content import Content
-from ssg import hooks
 
+from ssg import hooks
 
 class Parser:
     base_ext = ".html"
@@ -32,13 +32,11 @@ class Parser:
     def copy(self, path, source, dest):
         shutil.copy2(path, dest / path.relative_to(source))
 
-
 class ResourceParser(Parser):
     file_exts = [".jpg", ".png", ".gif", ".css", ".html"]
 
     def parse(self, path, source, dest):
         self.copy(path, source, dest)
-
 
 class MarkdownParser(Parser):
     file_exts = [".md", ".markdown"]
@@ -51,7 +49,7 @@ class MarkdownParser(Parser):
         sys.stdout.write(
             "\x1b[1;32m{} converted to HTML. Metadata: {}\n".format(path.name, content)
         )
-
+        hooks.event("written")
 
 class ReStructuredTextParser(Parser):
     file_exts = [".rst"]
@@ -61,6 +59,8 @@ class ReStructuredTextParser(Parser):
         html = publish_parts(content.body, writer_name="html5")
         filtered = hooks.filter("generate_menu", html["html_body"], self.base_ext)
         self.write(path, dest, filtered)
+        self.write(path, dest, html["html_body"])
         sys.stdout.write(
             "\x1b[1;32m{} converted to HTML. Metadata: {}\n".format(path.name, content)
         )
+        hooks.event("written")
